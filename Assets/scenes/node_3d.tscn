@@ -1,6 +1,12 @@
 [gd_scene format=3 uid="uid://20rmsuqu80r5"]
 
-[ext_resource type="Script" uid="uid://dwa2jdajb5pbq" path="res://scripts/1_load.gd" id="1_d6apo"]
+[ext_resource type="Script" uid="uid://wwf07opo63md" path="res://scripts/2_load.gd" id="1_d6apo"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_d6apo"]
+albedo_color = Color(1.92523e-06, 0.6724051, 0.9344618, 1)
+
+[sub_resource type="SphereMesh" id="SphereMesh_d6apo"]
+material = SubResource("StandardMaterial3D_d6apo")
 
 [node name="Node3D" type="Node3D" unique_id=1643881235]
 
@@ -8,3 +14,9 @@
 
 [node name="loader" type="Node" parent="." unique_id=253328848]
 script = ExtResource("1_d6apo")
+
+[node name="objectsparent" type="Node" parent="." unique_id=1136707261]
+
+[node name="sphere1" type="MeshInstance3D" parent="objectsparent" unique_id=312966849]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -5)
+mesh = SubResource("SphereMesh_d6apo")
