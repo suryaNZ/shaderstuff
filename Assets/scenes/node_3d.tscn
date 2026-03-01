@@ -2,11 +2,26 @@
 
 [ext_resource type="Script" uid="uid://wwf07opo63md" path="res://scripts/2_load.gd" id="1_d6apo"]
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_mcqa8"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_d6apo"]
+material = SubResource("StandardMaterial3D_mcqa8")
+
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_d6apo"]
 albedo_color = Color(1.92523e-06, 0.6724051, 0.9344618, 1)
 
 [sub_resource type="SphereMesh" id="SphereMesh_d6apo"]
 material = SubResource("StandardMaterial3D_d6apo")
+radius = 4.0
+height = 8.0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_tt8a5"]
+albedo_color = Color(1, 0.269528, 0.7850411, 1)
+
+[sub_resource type="SphereMesh" id="SphereMesh_mcqa8"]
+material = SubResource("StandardMaterial3D_tt8a5")
+radius = 4.0
+height = 8.0
 
 [node name="Node3D" type="Node3D" unique_id=1643881235]
 
@@ -17,6 +32,16 @@ script = ExtResource("1_d6apo")
 
 [node name="objectsparent" type="Node" parent="." unique_id=1136707261]
 
-[node name="sphere1" type="MeshInstance3D" parent="objectsparent" unique_id=312966849]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -5)
+[node name="MeshInstance3D" type="MeshInstance3D" parent="objectsparent" unique_id=629605071]
+transform = Transform3D(0.155, 0, 0, 0, 0.155, 0, 0, 0, 0.155, 0, 0, 0)
+mesh = SubResource("BoxMesh_d6apo")
+
+[node name="spheresParent" type="Node" parent="." unique_id=1224409227]
+
+[node name="sphere1" type="MeshInstance3D" parent="spheresParent" unique_id=312966849]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.695323, -7.733105)
 mesh = SubResource("SphereMesh_d6apo")
+
+[node name="sphere2" type="MeshInstance3D" parent="spheresParent" unique_id=1350542735]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.1922855, -2.0130043, -6.20839)
+mesh = SubResource("SphereMesh_mcqa8")

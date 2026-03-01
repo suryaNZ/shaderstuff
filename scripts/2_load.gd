@@ -3,6 +3,7 @@ extends Node
 
 
 @onready var objectsparent = $"../objectsparent"
+@onready var spheresParent = $"../spheresParent"
 @onready var camera = $"../Camera3D"
 #var sphere1TM: TriangleMesh
 
@@ -33,14 +34,12 @@ func _ready() -> void:
 	image_size.x = ProjectSettings.get_setting("display/window/size/viewport_width")
 	image_size.y = ProjectSettings.get_setting("display/window/size/viewport_height")
 	
-	print("begin compute")
 	setup_compute()
-	print("begin render")
 	var imagebytes = render()
-	print("finish render")
 	Image.create_from_data(image_size.x, image_size.y, false, Image.FORMAT_RGBAF, imagebytes).save_png("res://a.png")
 
 func setup_compute():
+
 	var shader_file := load("res://shaders/2_compute_shader.glsl")
 	var shader_spirv: RDShaderSPIRV = shader_file.get_spirv()
 	shader = rd.shader_create_from_spirv(shader_spirv)
@@ -68,6 +67,20 @@ func setup_compute():
 		camera.get_camera_projection().w,
 	])
 	var camera_bytes = projection_mat.to_byte_array()
+	camera_bytes.append_array(PackedFloat32Array([
+		camera.global_transform.basis.x.x,
+		camera.global_transform.basis.x.y,
+		camera.global_transform.basis.x.z, 1,
+		camera.global_transform.basis.y.x,
+		camera.global_transform.basis.y.y,
+		camera.global_transform.basis.y.z, 1,
+		camera.global_transform.basis.z.x,
+		camera.global_transform.basis.z.y,
+		camera.global_transform.basis.z.z, 1,
+		camera.global_transform.origin.x,
+		camera.global_transform.origin.y,
+		camera.global_transform.origin.z, 1
+	]).to_byte_array())
 	camera_bytes.append_array(PackedFloat32Array([camera.fov, camera.far, camera.near]).to_byte_array())
 	var camera_buffer = rd.storage_buffer_create(camera_bytes.size(), camera_bytes)
 	var camera_uniform := RDUniform.new()
@@ -91,26 +104,138 @@ func setup_compute():
 	face_uniform.binding = 2
 	face_uniform.add_id(face_buffer)
 	
-	var albedo_bytes = PackedColorArray(albedo).to_byte_array()
-	var albedo_buffer = rd.storage_buffer_create(albedo_bytes.size(), albedo_bytes)
-	var albedo_uniform = RDUniform.new()
-	albedo_uniform.uniform_type = RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER
-	albedo_uniform.binding = 3
-	albedo_uniform.add_id(albedo_buffer)
+	var material_bytes = PackedColorArray(albedo).to_byte_array()
+	var material_buffer = rd.storage_buffer_create(material_bytes.size(), material_bytes)
+	var material_uniform = RDUniform.new()
+	material_uniform.uniform_type = RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER
+	material_uniform.binding = 3
+	material_uniform.add_id(material_buffer)
 	
+	var spheres: Array[Vector4] = []
+	albedo.clear()
+	for meshinstance : MeshInstance3D in spheresParent.get_children():
+		var m : SphereMesh = meshinstance.mesh
+		spheres.append(Vector4(
+			meshinstance.global_transform.origin.x,
+			meshinstance.global_transform.origin.y,
+			meshinstance.global_transform.origin.z,
+			m.radius
+		))
+		albedo.append(meshinstance.get_active_material(0).albedo_color)
+		
+	var sphere_bytes = PackedVector4Array(spheres).to_byte_array()
+	var sphere_buffer = rd.storage_buffer_create(sphere_bytes.size(), sphere_bytes)
+	var sphere_uniform = RDUniform.new()
+	sphere_uniform.uniform_type = RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER
+	sphere_uniform.binding = 4
+	sphere_uniform.add_id(sphere_buffer)
+	
+	var sphere_material_bytes = PackedColorArray(albedo).to_byte_array()
+	var sphere_material_buffer = rd.storage_buffer_create(sphere_material_bytes.size(), sphere_material_bytes)
+	var sphere_material_uniform = RDUniform.new()
+	sphere_material_uniform.uniform_type = RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER
+	sphere_material_uniform.binding = 5
+	sphere_material_uniform.add_id(sphere_material_buffer)
 	
 	bindings = [
 		output_uniform,
 		camera_uniform,
 		face_uniform,
-		albedo_uniform,
+		material_uniform,
+		sphere_uniform,
+		sphere_material_uniform
 		# TODO other uniforms
 	]
 	
 	uniform_set = rd.uniform_set_create(bindings, shader, 0)
 
 func update_compute():
-	pass # TODO
+	# Camera info uniform buffer
+	var projection_mat = PackedVector4Array([
+		camera.get_camera_projection().x,
+		camera.get_camera_projection().y,
+		camera.get_camera_projection().z,
+		camera.get_camera_projection().w,
+	])
+	var camera_bytes = projection_mat.to_byte_array()
+	camera_bytes.append_array(PackedFloat32Array([camera.fov, camera.far, camera.near]).to_byte_array())
+	camera_bytes.append_array(PackedFloat32Array([
+		camera.global_transform.basis.x.x,
+		camera.global_transform.basis.x.y,
+		camera.global_transform.basis.x.z, 1,
+		camera.global_transform.basis.y.x,
+		camera.global_transform.basis.y.y,
+		camera.global_transform.basis.y.z, 1,
+		camera.global_transform.basis.z.x,
+		camera.global_transform.basis.z.y,
+		camera.global_transform.basis.z.z, 1,
+		camera.global_transform.origin.x,
+		camera.global_transform.origin.y,
+		camera.global_transform.origin.z, 1
+	]).to_byte_array())
+	var camera_buffer = rd.storage_buffer_create(camera_bytes.size(), camera_bytes)
+	var camera_uniform := RDUniform.new()
+	camera_uniform.uniform_type = RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER
+	camera_uniform.binding = 1
+	camera_uniform.add_id(camera_buffer)
+	
+	# TODO Faces of all objects
+	var faces = []
+	var albedo : Array[Color] = []
+	for meshinstance : MeshInstance3D in objectsparent.get_children():
+		for i in range (meshinstance.mesh.get_surface_count()):
+			albedo.append(meshinstance.get_active_material(0).albedo_color)
+		for face in meshinstance.mesh.get_faces():
+			faces.append(face + meshinstance.position)
+	
+	var face_bytes = PackedVector3Array(faces).to_byte_array()
+	var face_buffer = rd.storage_buffer_create(face_bytes.size(), face_bytes)
+	var face_uniform = RDUniform.new()
+	face_uniform.uniform_type = RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER
+	face_uniform.binding = 2
+	face_uniform.add_id(face_buffer)
+	
+	var material_bytes = PackedColorArray(albedo).to_byte_array()
+	var material_buffer = rd.storage_buffer_create(material_bytes.size(), material_bytes)
+	var material_uniform = RDUniform.new()
+	material_uniform.uniform_type = RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER
+	material_uniform.binding = 3
+	material_uniform.add_id(material_buffer)
+	
+	var spheres: Array[Vector4] = []
+	albedo.clear()
+	for meshinstance : MeshInstance3D in spheresParent.get_children():
+		var m : SphereMesh = meshinstance.mesh
+		spheres.append(Vector4(
+			meshinstance.position.x,
+			meshinstance.position.y,
+			meshinstance.position.z,
+			m.radius
+		))
+		albedo.append(meshinstance.get_active_material(0).albedo_color)
+		
+	var sphere_bytes = PackedVector4Array(spheres).to_byte_array()
+	var sphere_buffer = rd.storage_buffer_create(sphere_bytes.size(), sphere_bytes)
+	var sphere_uniform = RDUniform.new()
+	sphere_uniform.uniform_type = RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER
+	sphere_uniform.binding = 4
+	sphere_uniform.add_id(sphere_buffer)
+	
+	var sphere_material_bytes = PackedColorArray(albedo).to_byte_array()
+	var sphere_material_buffer = rd.storage_buffer_create(sphere_material_bytes.size(), sphere_material_bytes)
+	var sphere_material_uniform = RDUniform.new()
+	sphere_material_uniform.uniform_type = RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER
+	sphere_material_uniform.binding = 5
+	sphere_material_uniform.add_id(sphere_material_buffer)
+	
+	bindings[1] = camera_uniform
+	bindings[2] = face_uniform
+	bindings[3] = material_uniform
+	bindings[4] = sphere_uniform
+	bindings[5] = sphere_material_uniform
+	
+	uniform_set = rd.uniform_set_create(bindings, shader, 0)
+
 
 func render():
 	var compute_list = rd.compute_list_begin()
@@ -130,5 +255,7 @@ func render():
 
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta: float) -> void:
-	pass
+#func _process(delta: float) -> void:
+	#update_compute()
+	#var imagebytes = render()
+	#Image.create_from_data(image_size.x, image_size.y, false, Image.FORMAT_RGBAF, imagebytes).save_png("res://a.png")
