@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://20rmsuqu80r5"]
 
-[ext_resource type="Script" uid="uid://wwf07opo63md" path="res://scripts/2_load.gd" id="1_d6apo"]
+[ext_resource type="Script" uid="uid://dgnbvunp8070" path="res://scripts/3_load.gd" id="1_d6apo"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_mcqa8"]
 
@@ -8,20 +8,47 @@
 material = SubResource("StandardMaterial3D_mcqa8")
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_d6apo"]
-albedo_color = Color(1.92523e-06, 0.6724051, 0.9344618, 1)
+albedo_color = Color(0, 0, 0, 1)
+emission_enabled = true
+emission = Color(1, 1, 1, 1)
+emission_energy_multiplier = 2.42
 
 [sub_resource type="SphereMesh" id="SphereMesh_d6apo"]
 material = SubResource("StandardMaterial3D_d6apo")
-radius = 4.0
-height = 8.0
+radius = 50.001
+height = 100.0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_tt8a5"]
 albedo_color = Color(1, 0.269528, 0.7850411, 1)
+emission_energy_multiplier = 16.0
 
 [sub_resource type="SphereMesh" id="SphereMesh_mcqa8"]
 material = SubResource("StandardMaterial3D_tt8a5")
-radius = 4.0
-height = 8.0
+radius = 32.0
+height = 64.0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_3xeqs"]
+albedo_color = Color(0.2697228, 0.73861307, 1.1551381e-06, 1)
+emission_energy_multiplier = 16.0
+
+[sub_resource type="SphereMesh" id="SphereMesh_0mngw"]
+material = SubResource("StandardMaterial3D_3xeqs")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0mngw"]
+albedo_color = Color(1, 0.09803922, 0.30588236, 1)
+emission_energy_multiplier = 16.0
+
+[sub_resource type="SphereMesh" id="SphereMesh_7em37"]
+material = SubResource("StandardMaterial3D_0mngw")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7em37"]
+albedo_color = Color(1.732707e-06, 0.60479736, 0.768369, 1)
+emission_energy_multiplier = 16.0
+
+[sub_resource type="SphereMesh" id="SphereMesh_ifjqv"]
+material = SubResource("StandardMaterial3D_7em37")
+radius = 1.0
+height = 2.0
 
 [node name="Node3D" type="Node3D" unique_id=1643881235]
 
@@ -39,9 +66,21 @@ mesh = SubResource("BoxMesh_d6apo")
 [node name="spheresParent" type="Node" parent="." unique_id=1224409227]
 
 [node name="sphere1" type="MeshInstance3D" parent="spheresParent" unique_id=312966849]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.695323, -7.733105)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -41.871136, 27.67429, -51.3602)
 mesh = SubResource("SphereMesh_d6apo")
 
 [node name="sphere2" type="MeshInstance3D" parent="spheresParent" unique_id=1350542735]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.1922855, -2.0130043, -6.20839)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5118175, -33.11643, -3.662839)
 mesh = SubResource("SphereMesh_mcqa8")
+
+[node name="sphere3" type="MeshInstance3D" parent="spheresParent" unique_id=145860025]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.17545366, -0.74054945, -2.7317674)
+mesh = SubResource("SphereMesh_0mngw")
+
+[node name="sphere4" type="MeshInstance3D" parent="spheresParent" unique_id=1208481921]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.1829064, -0.6728302, -3.0915446)
+mesh = SubResource("SphereMesh_7em37")
+
+[node name="sphere5" type="MeshInstance3D" parent="spheresParent" unique_id=327871406]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.8057928, -0.17194366, -3.474413)
+mesh = SubResource("SphereMesh_ifjqv")
