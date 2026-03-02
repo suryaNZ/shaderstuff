@@ -11,7 +11,6 @@ material = SubResource("StandardMaterial3D_mcqa8")
 albedo_color = Color(0, 0, 0, 1)
 emission_enabled = true
 emission = Color(1, 1, 1, 1)
-emission_energy_multiplier = 2.42
 
 [sub_resource type="SphereMesh" id="SphereMesh_d6apo"]
 material = SubResource("StandardMaterial3D_d6apo")

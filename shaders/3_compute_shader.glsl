@@ -3,7 +3,6 @@
 
 const int MAX_BOUNCES = 4;
 const vec4 ENVIRONMENT_COLOUR = vec4(0.3,0.3,0.3,0.3);
-int SEED = 67;
 
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
@@ -100,12 +99,34 @@ Material gen_material(vec4 colour, vec4 emission_colour, float emission_strength
 //     return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453);
 // }
 
-float rand() {
-    SEED = SEED * 747796405 + 2891336453;
-    int result = ((SEED >> ((SEED >> 28) + 4)) ^ SEED) * 277803737;
-    result = (result >> 22) ^ result;
-    return result;
+// Used as initial seed to the PRNG.
+uint pcg_hash(uint seed) {
+uint state = seed * 747796405u + 2891336453u;
+uint word = ((state >> ((state >> 28u) + 4u)) ^ state) * 277803737u;
+return (word >> 22u) ^ word;
 }
+
+// Used to advance the PCG state.
+uint rand_pcg(inout uint rng_state) {
+uint state = rng_state;
+rng_state = rng_state * 747796405u + 2891336453u;
+uint word = ((state >> ((state >> 28u) + 4u)) ^ state) * 277803737u;
+return (word >> 22u) ^ word;
+}
+
+// Advances the prng state and returns the corresponding random float.
+float rand(inout uint state) {
+uint x = rand_pcg(state);
+state = x;
+return float(x) * uintBitsToFloat(0x2f800000u);
+}
+
+// float rand(inout uint SEED) {
+//     SEED = SEED * 747796405 + 2891336453;
+//     uint result = ((SEED >> ((SEED >> 28) + 4)) ^ SEED) * 277803737;
+//     result = (result >> 22) ^ result;
+//     return result / 4294967295.0;
+// }
 
 // intersection functions
 HitInfo RaySphere(Ray ray, vec3 sphereCentre, float radius, Material material) {
@@ -127,7 +148,7 @@ HitInfo RaySphere(Ray ray, vec3 sphereCentre, float radius, Material material) {
             hitinfo.didHit = true;
             hitinfo.dist = dist;
             hitinfo.pos = ray.origin + ray.dir * dist;
-            hitinfo.normal = normalize(hitinfo.pos - sphereCentre);
+            hitinfo.normal = normalize(sphereCentre - hitinfo.pos);
             hitinfo.material = material;
         }
     }
@@ -139,14 +160,14 @@ HitInfo RaySphere(Ray ray, vec3 sphereCentre, float radius, Material material) {
 //     return vec3(rand(c1), rand(c2), rand(c3));
 // }
 
-vec3 randomHemisphereDir(vec3 normal) {
-    vec3 res = vec3(rand(), rand(), rand());
+vec3 randomHemisphereDir(vec3 normal, inout uint SEED) {
+    vec3 res = vec3(rand(SEED), rand(SEED), rand(SEED));
     if(dot(res, normal) < 0) res = vec3(0,0,0) - res;
-    return res;
+    return normalize(res);
 }
 
 
-vec4 Trace(Ray ray) {
+vec4 Trace(Ray ray, inout uint SEED) {
     HitInfo hitinfo;
     HitInfo newhitinfo;
     vec4 color = vec4(1,1,1,1);
@@ -165,7 +186,7 @@ vec4 Trace(Ray ray) {
         }
         if(!hitinfo.didHit) continue;
         ray.origin = hitinfo.pos;
-        ray.dir = randomHemisphereDir(hitinfo.normal);
+        ray.dir = randomHemisphereDir(hitinfo.normal, SEED);
         vec4 emittedLight = hitinfo.material.emission_colour * hitinfo.material.emission_strength;
         incomingLight += emittedLight * color;
         color *= hitinfo.material.colour;
@@ -207,14 +228,25 @@ void main() {
     ray.origin = camera_data.CameraToWorld[3].xyz;
     ray.dir = normalize(viewPoint - ray.origin);
 
-    SEED = invocID.x * invocID.x * invocID.y;
+    uint SEED = pcg_hash(invocID.x * invocID.x * invocID.y);
 
     vec4 total_colour = vec4(0,0,0,0);
     for(int i = 0; i < num_rays; i++) {
-        total_colour += Trace(ray);
+        total_colour += Trace(ray, SEED);
     }
 
     imageStore(output_render, invocID, total_colour / num_rays);
+
+    // float a;
+    // a = rand(SEED);
+    // a = rand(SEED);
+    // a = rand(SEED);
+    // a = rand(SEED);
+    // a = rand(SEED);
+    // a = rand(SEED);
+    // vec3 b = randomHemisphereDir(vec3(0,0,0), SEED);
+    // imageStore(output_render, invocID, vec4(b,1));
+
 
     // HitInfo closestHit;
     // closestHit.didHit = false;
