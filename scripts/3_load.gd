@@ -37,7 +37,7 @@ func _ready() -> void:
 	setup_compute()
 	var imagebytes = render()
 	Image.create_from_data(image_size.x, image_size.y, false, Image.FORMAT_RGBAF, imagebytes).save_png("res://a.png")
-
+	print("saved image")
 func setup_compute():
 
 	var shader_file := load("res://shaders/3_compute_shader.glsl")

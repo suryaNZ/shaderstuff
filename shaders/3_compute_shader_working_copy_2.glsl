@@ -1,10 +1,9 @@
 #[compute]
 #version 450
 
-const int MAX_BOUNCES = 10;
+const int MAX_BOUNCES = 4;
 const vec4 ENVIRONMENT_COLOUR = vec4(0.3,0.3,0.3,0.3);
 int SEED = 67;
-int num_rays = 10000;
 
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
@@ -102,9 +101,9 @@ Material gen_material(vec4 colour, vec4 emission_colour, float emission_strength
 // }
 
 
-uint rand() {
+float rand() {
     SEED = SEED * 747796405 + 2891336453;
-    uint result = ((SEED >> ((SEED >> 28) + 4)) ^ SEED) * 277803737;
+    int result = ((SEED >> ((SEED >> 28) + 4)) ^ SEED) * 277803737;
     result = (result >> 22) ^ result;
     return result;
 }
@@ -142,11 +141,7 @@ HitInfo RaySphere(Ray ray, vec3 sphereCentre, float radius, Material material) {
 // }
 
 vec3 randomHemisphereDir(vec3 normal) {
-    vec3 res = vec3(
-        cos(rand()) * 67, 
-        cos(rand()) * 67, 
-        cos(rand()) * 67
-        );
+    vec3 res = vec3(rand(), rand(), rand());
     if(dot(res, normal) < 0) res = vec3(0,0,0) - res;
     return res;
 }
@@ -169,17 +164,12 @@ vec4 Trace(Ray ray) {
             if(!hitinfo.didHit) hitinfo = newhitinfo;
             else if(newhitinfo.dist < hitinfo.dist) hitinfo = newhitinfo;
         }
-        if(!hitinfo.didHit) {
-            // incomingLight += max(0,dot(vec3(-0.5,-0.5,-0.5), normalize(ray.dir))) * vec4(1,1,1,1) * color;
-            break;
-        }
+        if(!hitinfo.didHit) continue;
         ray.origin = hitinfo.pos;
-        vec4 emittedLight = hitinfo.material.emission_colour * hitinfo.material.emission_strength;
-        incomingLight += emittedLight * color * dot(hitinfo.normal, vec3(0,0,0) - normalize(ray.dir)) * 2;
-        color *= hitinfo.material.colour;
         ray.dir = randomHemisphereDir(hitinfo.normal);
-        // incomingLight = vec4(0,0,dot(hitinfo.normal, vec3(0,0,0) - normalize(ray.dir)), 1);
-        // break;
+        vec4 emittedLight = hitinfo.material.emission_colour * hitinfo.material.emission_strength;
+        incomingLight += emittedLight * color;
+        color *= hitinfo.material.colour;
     }
     // if(!hitinfo.didHit) return ENVIRONMENT_COLOUR;
     incomingLight.w = 1;
@@ -191,6 +181,7 @@ vec4 Trace(Ray ray) {
 int x, y;
 vec2 uv;
 
+int num_rays = 100;
 
 void main() {
     x = int(gl_GlobalInvocationID.x);
@@ -226,11 +217,6 @@ void main() {
     }
 
     imageStore(output_render, invocID, total_colour / num_rays);
-    // imageStore(output_render, invocID, vec4(
-    //     rand() / 4294967295.0, 
-    //     rand() / 4294967295.0, 
-    //     rand() / 4294967295.0, 
-    //     1.0));
 
     // float a;
     // a = rand(SEED);

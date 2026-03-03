@@ -41,7 +41,6 @@ emission_energy_multiplier = 16.0
 material = SubResource("StandardMaterial3D_0mngw")
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7em37"]
-albedo_color = Color(1.732707e-06, 0.60479736, 0.768369, 1)
 emission_energy_multiplier = 16.0
 
 [sub_resource type="SphereMesh" id="SphereMesh_ifjqv"]
@@ -65,7 +64,7 @@ mesh = SubResource("BoxMesh_d6apo")
 [node name="spheresParent" type="Node" parent="." unique_id=1224409227]
 
 [node name="sphere1" type="MeshInstance3D" parent="spheresParent" unique_id=312966849]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -41.871136, 27.67429, -51.3602)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -44.28749, 35.08175, -35.392437)
 mesh = SubResource("SphereMesh_d6apo")
 
 [node name="sphere2" type="MeshInstance3D" parent="spheresParent" unique_id=1350542735]
@@ -77,7 +76,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.17545366, -0.74054945, -2.
 mesh = SubResource("SphereMesh_0mngw")
 
 [node name="sphere4" type="MeshInstance3D" parent="spheresParent" unique_id=1208481921]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.1829064, -0.6728302, -3.0915446)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.3609414, -0.6728302, -3.056744)
 mesh = SubResource("SphereMesh_7em37")
 
 [node name="sphere5" type="MeshInstance3D" parent="spheresParent" unique_id=327871406]
